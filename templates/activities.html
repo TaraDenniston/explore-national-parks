@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Explore National Parks - Activities{% endblock %}
+
+{% block content %}
+
+<h1>Explore National Parks</h1>
+<h3>Activities</h3>
+<div id="activities">
+  <p>
+  {% for activity in activities %}
+    <span>ID {{activity.id}}: {{activity.name}}</span><br>
+  {% endfor %}
+  </p>
+</div>
+
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Explore National Parks - Topics{% endblock %}
+
+{% block content %}
+
+<h1>Explore National Parks</h1>
+<h3>Topics</h3>
+<div id="topics">
+  <p>
+  {% for topic in topics %}
+    <span>ID {{topic.id}}: {{topic.name}}</span><br>
+  {% endfor %}
+  </p>
+</div>
+
+{% endblock %}
