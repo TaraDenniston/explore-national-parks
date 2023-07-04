@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Explore National Parks - Activities{% endblock %}
+
+{% block content %}
+
+<h3 class="my-3">Search Results</h3>
+
+{% for park in parks %}
+<div class="row my-3">
+  <div class="card w-100">  
+    <div class="card-body">
+      <div class="row">
+        <div class="col">
+          <h5 class="card-title">{{ park.fullName }}</h5>
+          <p class="card-text">{{ park.description }}</p>
+          <a href="/parks/{{ park.parkCode }}" class="btn btn-primary">More Information</a>
+        </div>
+        <div class="col-4">  
+          <img style="max-width: 20rem; max-height: 20rem;"
+               src="{{ park.focusImage }}" 
+               alt="{{ park.focusImageAlt }}">
+        </div>
+      </div> 
+    </div>
+  </div>
+  
+</div>
+{% endfor %}
+
+{% endblock %}
