@@ -1,9 +1,10 @@
-import urllib.request
+import urllib.request, json
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from forms import SearchByStateForm
 from keys import SECRET_KEY, NPS_API_KEY
-from models import db, connect_db, User, Activity, Topic
+from models import BASE_URL, connect_db, User, Activity, Topic
+from park import Park
 
 app = Flask(__name__)
 app.app_context().push()
@@ -23,20 +24,31 @@ def display_homepage():
     
     ### Search form for States ###
     statesForm = SearchByStateForm()
-
-    # Parse states JSON file into Python dict
-    # with open('static/states.json') as file:
-    #     states = json.load(file)
-    # statesList = [(item['value'], item['text']) for item in states]
-    # statesForm.state.choices = statesList
     
     # When states form is submitted
     if statesForm.validate_on_submit():
         # Get state from form data and redirect to search results
         state = (statesForm.state.data)
-        return redirect(f'/results/states/{state}')
+        return redirect(f'/search/states/{state}')
 
     return render_template('index.html', statesForm=statesForm)
+
+@app.route('/search/states/<state>')
+def display_results_states(state):
+    """Display search results by state"""
+
+    # Make request to API
+    url = f'{BASE_URL}/parks?stateCode={state}&api_key={NPS_API_KEY}'
+    response = urllib.request.urlopen(url)
+
+    res_body = response.read()
+    data = json.loads(res_body.decode("utf-8"))
+
+    parks = []
+    for obj in data['data']:
+        parks.append(Park(obj))
+    
+    return render_template('results.html', parks=parks)
 
 @app.route('/activities')
 def display_activities():
