@@ -1,4 +1,4 @@
-from models import db, User, Activity, Topic
+from models import db, User, Activity, Topic, Park
 from app import app
 
 # Create (or recreate) tables
@@ -11,6 +11,7 @@ Activity.populate_table()
 # Populate topics table
 Topic.populate_table()
 
-# Populate states table
+# Populate parks table
+Park.populate_table()
 
 # Create data for users table
