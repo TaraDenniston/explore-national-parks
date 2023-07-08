@@ -12,14 +12,14 @@
     <div class="card-body">
       <div class="row">
         <div class="col">
-          <h5 class="card-title">{{ park.fullName }}</h5>
+          <h5 class="card-title">{{ park.full_name }}</h5>
           <p class="card-text">{{ park.description }}</p>
-          <a href="/parks/{{ park.parkCode }}" class="btn btn-primary">More Information</a>
+          <a href="/parks/{{ park.park_code }}" class="btn btn-primary">More Information</a>
         </div>
         <div class="col-4">  
           <img style="max-width: 20rem; max-height: 20rem;"
-               src="{{ park.focusImage }}" 
-               alt="{{ park.focusImageAlt }}">
+               src="{{ park.image_url }}" 
+               alt="{{ park.image_alt }}">
         </div>
       </div> 
     </div>
