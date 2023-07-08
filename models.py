@@ -18,25 +18,24 @@ class User(db.Model):
 
     __tablename__ = 'users'
 
-    username = db.Column(db.String(20), primary_key=True, unique=True)
-    password = db.Column(db.Text, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     email = db.Column(db.String(50), nullable=False, unique=True)
+    password = db.Column(db.Text, nullable=False)
     first_name = db.Column(db.String(30), nullable=False)
     last_name = db.Column(db.String(30), nullable=False)
 
     def __repr__(self):
-        return f'< User {self.username}: {self.first_name} {self.last_name}, {self.email} >'
+        return f'< User {self.id}: {self.email}, {self.first_name}, {self.last_name} >'
 
     @classmethod
-    def register(cls, username, pwd, email, first_name, last_name):
+    def register(cls, email, pwd, first_name, last_name):
         """Register user with hashed password and return user instance"""
 
         # Create hashed version of password to store
         pw_hash = bcrypt.generate_password_hash(pwd).decode('utf8')
 
         # Create user instance
-        user = cls(username=username, password=pw_hash, email=email, \
-                   first_name=first_name, last_name=last_name)
+        user = cls(email=email, password=pw_hash, first_name=first_name, last_name=last_name)
         
         # Add user to database
         db.session.add(user)
@@ -45,12 +44,12 @@ class User(db.Model):
         return user
     
     @classmethod
-    def authenticate(cls, username, pwd):
+    def authenticate(cls, email, pwd):
         """Validate that user exists & password is correct
 		   Return user if valid; else return False"""
 
         # Find user
-        u = User.query.filter_by(username=username).first()
+        u = User.query.filter_by(email=email).first()
 
         # If user exists and pw matches, return user; otherwise return False
         if u and bcrypt.check_password_hash(u.password, pwd):
@@ -136,5 +135,56 @@ class Topic(db.Model):
 
         # Add list of topics to the db
         db.session.add_all(topics)
+        db.session.commit()
+
+
+class Park(db.Model):
+    """Model for a park"""
+
+    __tablename__ = 'parks'
+
+    park_code = db.Column(db.String(10), primary_key=True, unique=True)
+    full_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.Text, nullable=False)
+    image_alt = db.Column(db.Text, nullable=False)
+
+    def __repr__(self):
+        return f'< Park {self.park_code}: {self.full_name} >'
+    
+    @classmethod
+    def populate_table(cls):
+        """Request parks data from the NPS API and use it to populate
+           the parks table in the database"""
+        
+        # Delete any records currently in the table
+        cls.query.delete()
+        
+        parks = []
+
+        # Make request to API
+        url = f'{BASE_URL}/parks?limit=500&api_key={NPS_API_KEY}'
+        response = urllib.request.urlopen(url)
+
+        res_body = response.read()
+        data = json.loads(res_body.decode("utf-8"))
+
+        parks_list = data['data']
+
+        # From the data, create new Park objects and append to list
+        for item in parks_list:
+            if item['images']:
+                img_url=item['images'][0]['url']
+                img_alt=item['images'][0]['altText']
+            else:
+                img_url='https://placehold.co/400x300?text=No+Image'
+                img_alt='no default image'
+
+            park = Park(park_code=item['parkCode'], full_name=item['fullName'], \
+                        description=item['description'], image_url=img_url, image_alt=img_alt)
+            parks.append(park)
+
+        # Add list of parks to the db
+        db.session.add_all(parks)
         db.session.commit()
     
