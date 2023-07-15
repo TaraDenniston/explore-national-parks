@@ -2,12 +2,12 @@ import os
 import urllib.request, json
 from flask import Flask, flash, jsonify, redirect, render_template, session, g, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
-from forms import RegisterForm, SearchByStateForm
+from forms import RegisterForm, LoginForm, SearchByStateForm
 from keys import SECRET_KEY, NPS_API_KEY
 from models import BASE_URL, connect_db, User, Activity, Topic, Park
 from sqlalchemy.exc import IntegrityError
 
-CURR_USER_KEY = "curr_user"
+CURR_USER_KEY = "none"
 
 app = Flask(__name__)
 app.app_context().push()
@@ -34,11 +34,11 @@ def add_user_to_g():
     else:
         g.user = None
 
-def login_user(user):
+def login(user):
     """Log in user."""
     session[CURR_USER_KEY] = user.id
 
-def logout_user():
+def logout():
     """Log out user."""
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
@@ -60,11 +60,65 @@ def register_user():
             flash("Email already exists in database", 'danger')
             return render_template('register.html', form=form)
 
-        login_user(new_user)
+        login(new_user)
         return redirect(f'/users/{new_user.id}')
 
     return render_template('register.html', form=form)
 
+@app.route('/login', methods=['GET', 'POST'])
+def login_user():
+    form = LoginForm()
+
+    # Redirect if current user is already logged in
+    if g.user:
+        flash('You are already logged in', 'danger')
+        return redirect(f'/profile/{g.user.id}')
+        
+    # User form data to log user in
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
+
+        user = User.authenticate(email, password)
+
+        if user:
+            login(user)
+            flash('You have successfully logged in', 'success')
+            return redirect(f'/profile/{user.id}')
+        
+        flash('The credentials you entered are invalid')
+    
+    return render_template('login.html', form=form)
+
+@app.route('/logout')
+def logout_user():
+    # Verify current user is logged in
+    if g.user:
+        logout()
+        flash('You have successfully logged out', 'success')
+        return redirect(f'/login')
+    
+    # If no current user
+    flash('You are not logged in', 'danger')
+    return redirect(f'/login')
+
+@app.route('/profile/<int:user_id>')
+def display_profile(user_id):
+    # Redirect if there is no current user
+    if not g.user:
+        flash('Please log in', 'danger')
+        return redirect('/login')
+    
+    user = User.query.get_or_404(user_id)
+
+    # favorites = user.favorite_parks
+
+    return render_template('profile.html', user=user)
+
+
+#################################################################################
+# Home and search routes
+#################################################################################
 
 @app.route('/', methods=["GET", "POST"])
 def display_homepage():
@@ -80,8 +134,6 @@ def display_homepage():
         return redirect(f'/search/states/{state}')
 
     return render_template('index.html', statesForm=statesForm)
-
-
 
 @app.route('/search/states/<state>')
 def display_results_states(state):
