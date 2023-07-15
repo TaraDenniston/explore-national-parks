@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Explore National Parks - Login New User{% endblock %}
+
+{% block content %}
+
+<h2>User Profile</h2>
+<h3>{{ user.first_name }} {{ user.last_name }}</h3>
+<p>{{ user.email }}</p>
+<form action="/edit-user">
+  <button type="submit" class="btn btn-primary">Edit</button>
+</form>
+
+<h3>Favorite Parks</h3>
+
+{% endblock %}
