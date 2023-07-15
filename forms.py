@@ -10,6 +10,10 @@ class RegisterForm(FlaskForm):
     first_name = StringField('First Name', validators=[InputRequired(), Length(max=30)])
     last_name = StringField('First Name', validators=[InputRequired(), Length(max=30)])
 
+class LoginForm(FlaskForm):
+    email = EmailField('Email', validators=[InputRequired(), Length(max=50)])
+    password = PasswordField('Password', validators=[InputRequired()])
+
 # Parse states JSON file into Python dict
 with open('static/states.json') as file:
     states = json.load(file)
