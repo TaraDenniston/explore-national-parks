@@ -61,7 +61,7 @@ def register_user():
             return render_template('register.html', form=form)
 
         login(new_user)
-        return redirect(f'/users/{new_user.id}')
+        return redirect(f'/profile/{new_user.id}')
 
     return render_template('register.html', form=form)
 
