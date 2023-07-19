@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Explore National Parks - Park detail for {{ park.full_name }}{% endblock %}
+
+{% block hero %}
+  <img class="pt-5" style="max-width: 100vw;"
+       src="{{ park.image_url }}" 
+       alt="{{ park.image_alt }}">
+{% endblock %}
+
+
+{% block content %}
+
+<h2>{{ park.full_name }}</h2>
+<p>{{ park.description }}</p>
+<a href="{{ park.url }}">Visit Official Park Website</a>
+
+{% if park.note %}
+<h3>Notes</h3>
+<p>{{ park.note }}</p>
+{% endif %}
+
+{% endblock %}
