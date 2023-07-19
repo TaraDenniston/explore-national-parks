@@ -12,7 +12,43 @@
     <div class="card-body">
       <div class="row">
         <div class="col">
-          <h5 class="card-title">{{ park.full_name }}</h5>
+          <h5 class="card-title">{{ park.full_name }} 
+          {% if g.user %} 
+            {% if park.park_code in favorites %}
+            <i class="fav fa-solid fa-star" 
+              id="{{ park.park_code }}"
+              data-park="{{ park.park_code }}"
+              data-user="{{ g.user.id }}"
+              data-url="{{ url }}"
+              data-fav="true" 
+              data-toggle="tooltip"
+              data-placement="right"
+              title="Remove favorite"                
+              style="color: #f7d702;">
+            </i>
+            {% else %}
+            <i class="fav fa-regular fa-star" 
+              id="{{ park.park_code }}"
+              data-park="{{ park.park_code }}"
+              data-user="{{ g.user.id }}"
+              data-url="{{ url }}"
+              data-fav="false"
+              data-toggle="tooltip"
+              data-placement="right"
+              title="Mark as favorite" 
+              style="color: #bababa;">
+            </i>
+            {% endif %}
+          {% else %}
+            <i class="fav fa-regular fa-star"
+               data-fav="false"
+               style="color: #bababa;"
+               data-toggle="popover"
+
+               data-content="Please log in to add a park to favorites">
+            </i>
+          {% endif %}
+          </h5>
           <p class="card-text">{{ park.description }}</p>
           <a href="/parks/{{ park.park_code }}" class="btn btn-primary">More Information</a>
         </div>
@@ -23,8 +59,7 @@
         </div>
       </div> 
     </div>
-  </div>
-  
+  </div>  
 </div>
 {% endfor %}
 
