@@ -24,6 +24,38 @@ debug = DebugToolbarExtension(app)
 connect_db(app)
 
 #################################################################################
+# Helper functions
+#################################################################################
+
+# Receive data from ajax request and use it to update user's list of favorites
+def update_favorite():
+    request_data = request.get_json()
+    fav_data = json.loads(request_data)
+
+    # Get the data from the request
+    fav_park_id = fav_data['park']
+    fav_user_id = fav_data['user']
+    fav_value = fav_data['favValue']
+
+    # Find the user
+    fav_user = User.query.get(fav_user_id)
+
+    # Add or remove the park to/from the user's favorites list
+    fav_park = Park.query.get(fav_park_id)
+
+    if fav_value == "true":
+        fav_user.favorites.append(fav_park)
+    elif fav_value == "false":
+        fav_user.favorites.remove(fav_park)
+
+    db.session.add(fav_user)
+    db.session.commit()
+
+    return
+
+
+
+#################################################################################
 # User methods & routes
 #################################################################################
 
@@ -103,7 +135,7 @@ def logout_user():
     flash('You are not logged in', 'danger')
     return redirect(f'/login')
 
-@app.route('/profile/<int:user_id>')
+@app.route('/profile/<int:user_id>', methods=["GET", "POST"])
 def display_profile(user_id):
     # Redirect if there is no current user
     if not g.user:
@@ -111,29 +143,21 @@ def display_profile(user_id):
         return redirect('/login')
     
     user = User.query.get_or_404(user_id)
+    url = url_for('display_profile', user_id=user_id)
+    favorites = user.favorites
 
-    # # Get list of user's favorite parks
-    # favorites = (UserPark
-    #             .query
-    #             .filter(UserPark.user_id == user_id, UserPark.is_favorite == True)
-    #             .all())
+    if request.method == "POST":
+        update_favorite()
+        # We don't want the page to refresh when the POST request is made,
+        # so we send a status of 204 No Content back to the request
+        return ('', 204)
     
-    # favorite_parks = []
-    # for item in favorites:
-    #     favorite_parks.append(Park.query.get(item.park_id))
-
-    return render_template('profile.html', user=user)
+    return render_template('profile.html', user=user, url=url, favorites=favorites)
 
 
 #################################################################################
 # Home and search routes
 #################################################################################
-
-def jsonify_no_content():
-    response = make_response('', 204)
-    response.mimetype = app.config['JSONIFY_MIMETYPE']
- 
-    return response
 
 @app.route('/', methods=["GET", "POST"])
 def display_homepage():
@@ -155,8 +179,8 @@ def display_results_states(state):
     """Display search results by state"""
 
     # Make request to API
-    url = f'{BASE_URL}/parks?stateCode={state}&api_key={NPS_API_KEY}'
-    response = urllib.request.urlopen(url)
+    api_url = f'{BASE_URL}/parks?stateCode={state}&api_key={NPS_API_KEY}'
+    response = urllib.request.urlopen(api_url)
 
     res_body = response.read()
     data = json.loads(res_body.decode("utf-8"))
@@ -189,46 +213,7 @@ def display_results_states(state):
 
     # If the page sends a POST request regarding favorite status for a park
     if request.method == "POST":
-        # request_data = request.form
-        # print(request_data)
-
-        # # Get the data from the request
-        # fav_park_id = request.form.get('park')
-        # print(fav_park_id)
-        # fav_user_id = request.form.get('user')
-        # print(fav_user_id)
-        # fav_value = request.form.get('favValue')
-        # print(fav_value)
-
-        request_data = request.get_json()
-        print(request_data)
-        new_data = json.loads(request_data)
-        print(new_data)
-
-        # Get the data from the request
-        fav_park_id = new_data['park']
-        print(fav_park_id)
-        fav_user_id = new_data['user']
-        print(fav_user_id)
-        fav_value = new_data['favValue']
-        print(fav_value)
-
-        # Find the user
-        fav_user = User.query.get(fav_user_id)
-
-        # Add or remove the park to/from the user's favorites list
-        fav_park = Park.query.get(fav_park_id)
-
-        if fav_value:
-            fav_user.favorites.append(fav_park)
-        else:
-            fav_user.favorites.remove(fav_park)
-
-        db.session.add(fav_user)
-        db.session.commit()
-
-        # We don't want the page to refresh when the POST request is made,
-        # so we send a status of 204 No Content back to the request
+        update_favorite()
         return ('', 204)
 
     return render_template('results.html', parks=parks, url=url, favorites=favorites)
