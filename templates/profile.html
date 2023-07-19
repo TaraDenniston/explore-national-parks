@@ -1,16 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Explore National Parks - Login New User{% endblock %}
+{% block title %}Explore National Parks - User Profile{% endblock %}
 
 {% block content %}
 
-<h2>User Profile</h2>
+<h2 class="my-4">User Profile</h2>
 <h3>{{ user.first_name }} {{ user.last_name }}</h3>
 <p>{{ user.email }}</p>
 <form action="/edit-user">
-  <button type="submit" class="btn btn-primary">Edit</button>
+  <button type="submit" class="btn btn-primary">Edit User</button>
 </form>
 
-<h3>Favorite Parks</h3>
+<h3 class="mt-5">Favorite Parks</h3>
+
+{% for park in favorites %}
+<div class="row my-3">
+  <div class="card w-100">  
+    <div class="card-body">
+      <div class="row">
+        <div class="col">
+          <h5 class="card-title">{{ park.full_name }}
+            <i class="fav fa-solid fa-star" 
+              id="{{ park.park_code }}"
+              data-park="{{ park.park_code }}"
+              data-user="{{ g.user.id }}"
+              data-url="{{ url }}"
+              data-fav="true" 
+              data-toggle="tooltip"
+              data-placement="right"
+              title="Remove favorite"                
+              style="color: #f7d702;">
+            </i>
+          </h5>
+          <p class="card-text">{{ park.description }}</p>
+          <a href="/parks/{{ park.park_code }}" class="btn btn-primary">More Information</a>
+        </div>
+        <div class="col-4">  
+          <img style="max-width: 20rem; max-height: 20rem;"
+               src="{{ park.image_url }}" 
+               alt="{{ park.image_alt }}">
+        </div>
+      </div> 
+    </div>
+  </div>
+  
+</div>
+{% endfor %}
 
 {% endblock %}
