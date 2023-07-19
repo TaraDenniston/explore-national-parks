@@ -1,10 +1,11 @@
 import os
 import urllib.request, json
-from flask import Flask, flash, jsonify, redirect, render_template, session, g, request, url_for
+from flask import Flask, flash, jsonify, make_response, redirect, render_template, \
+    session, g, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from forms import RegisterForm, LoginForm, SearchByStateForm
 from keys import SECRET_KEY, NPS_API_KEY
-from models import BASE_URL, connect_db, User, Activity, Topic, Park
+from models import BASE_URL, db, connect_db, User, Activity, Topic, Park, Favorite, Note
 from sqlalchemy.exc import IntegrityError
 
 CURR_USER_KEY = "none"
@@ -111,7 +112,15 @@ def display_profile(user_id):
     
     user = User.query.get_or_404(user_id)
 
-    # favorites = user.favorite_parks
+    # # Get list of user's favorite parks
+    # favorites = (UserPark
+    #             .query
+    #             .filter(UserPark.user_id == user_id, UserPark.is_favorite == True)
+    #             .all())
+    
+    # favorite_parks = []
+    # for item in favorites:
+    #     favorite_parks.append(Park.query.get(item.park_id))
 
     return render_template('profile.html', user=user)
 
@@ -119,6 +128,12 @@ def display_profile(user_id):
 #################################################################################
 # Home and search routes
 #################################################################################
+
+def jsonify_no_content():
+    response = make_response('', 204)
+    response.mimetype = app.config['JSONIFY_MIMETYPE']
+ 
+    return response
 
 @app.route('/', methods=["GET", "POST"])
 def display_homepage():
@@ -135,7 +150,7 @@ def display_homepage():
 
     return render_template('index.html', statesForm=statesForm)
 
-@app.route('/search/states/<state>')
+@app.route('/search/states/<state>', methods=["GET", "POST"])
 def display_results_states(state):
     """Display search results by state"""
 
@@ -156,8 +171,83 @@ def display_results_states(state):
 
         # Add the Park object to the list
         parks.append(park)
-    
-    return render_template('results.html', parks=parks)
+
+    favorites = []
+    if g.user:
+        # Make user object
+        user = User.query.get(g.user.id)
+
+        # Pull list of favorite parks from user object
+        favorite_parks = user.favorites
+
+        # Add park code to favorites list
+        for park in favorite_parks:
+            favorites.append(park.park_code)
+
+    url = url_for('display_results_states', state=state)
+
+
+    # If the page sends a POST request regarding favorite status for a park
+    if request.method == "POST":
+        # request_data = request.form
+        # print(request_data)
+
+        # # Get the data from the request
+        # fav_park_id = request.form.get('park')
+        # print(fav_park_id)
+        # fav_user_id = request.form.get('user')
+        # print(fav_user_id)
+        # fav_value = request.form.get('favValue')
+        # print(fav_value)
+
+        request_data = request.get_json()
+        print(request_data)
+        new_data = json.loads(request_data)
+        print(new_data)
+
+        # Get the data from the request
+        fav_park_id = new_data['park']
+        print(fav_park_id)
+        fav_user_id = new_data['user']
+        print(fav_user_id)
+        fav_value = new_data['favValue']
+        print(fav_value)
+
+        # Find the user
+        fav_user = User.query.get(fav_user_id)
+
+        # Add or remove the park to/from the user's favorites list
+        fav_park = Park.query.get(fav_park_id)
+
+        if fav_value:
+            fav_user.favorites.append(fav_park)
+        else:
+            fav_user.favorites.remove(fav_park)
+
+        db.session.add(fav_user)
+        db.session.commit()
+
+        # We don't want the page to refresh when the POST request is made,
+        # so we send a status of 204 No Content back to the request
+        return ('', 204)
+
+    return render_template('results.html', parks=parks, url=url, favorites=favorites)
+
+
+#################################################################################
+# Park routes
+#################################################################################
+
+@app.route('/parks/<park_code>')
+def display_park_details(park_code):
+    """Display all the details of one park, including notes and favorite status
+    if the user is logged in"""
+
+    park = Park.query.get_or_404(park_code)
+
+    return render_template('park.html', park=park)
+
+
 
 @app.route('/activities')
 def display_activities():
