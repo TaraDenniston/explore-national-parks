@@ -1,4 +1,5 @@
 import urllib.request, json
+# from flask import g
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from keys import NPS_API_KEY
@@ -23,6 +24,8 @@ class User(db.Model):
     password = db.Column(db.Text, nullable=False)
     first_name = db.Column(db.String(30), nullable=False)
     last_name = db.Column(db.String(30), nullable=False)
+
+    favorites = db.relationship('Park', secondary='favorites')
 
     def __repr__(self):
         return f'< User {self.id}: {self.email}, {self.first_name}, {self.last_name} >'
@@ -56,7 +59,84 @@ class User(db.Model):
             return u
         else:
             return False
+
+
+class Park(db.Model):
+    """Model for a park"""
+
+    __tablename__ = 'parks'
+
+    park_code = db.Column(db.String(10), primary_key=True, unique=True)
+    full_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.Text, nullable=False)
+    image_alt = db.Column(db.Text, nullable=False)
+
+    def __repr__(self):
+        return f'< Park {self.park_code}: {self.full_name} >'
+    
+    @classmethod
+    def populate_table(cls):
+        """Request parks data from the NPS API and use it to populate
+           the parks table in the database"""
         
+        # Delete any records currently in the table
+        cls.query.delete()
+        
+        parks = []
+
+        # Make request to API
+        url = f'{BASE_URL}/parks?limit=500&api_key={NPS_API_KEY}'
+        response = urllib.request.urlopen(url)
+
+        res_body = response.read()
+        data = json.loads(res_body.decode("utf-8"))
+
+        parks_list = data['data']
+
+        # From the data, create new Park objects and append to list
+        for item in parks_list:
+            if item['images']:
+                img_url=item['images'][0]['url']
+                img_alt=item['images'][0]['altText']
+            else:
+                img_url='https://placehold.co/400x300?text=No+Image'
+                img_alt='no default image'
+
+            park = Park(park_code=item['parkCode'], full_name=item['fullName'], \
+                        description=item['description'], image_url=img_url, image_alt=img_alt)
+            parks.append(park)
+
+        # Add list of parks to the db
+        db.session.add_all(parks)
+        db.session.commit()
+
+
+class Favorite(db.Model):
+    """Mapping a user to a favorited park"""
+
+    __tablename__ = 'favorites'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    park_id = db.Column(db.String(10), db.ForeignKey('parks.park_code', ondelete='cascade'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'))
+
+    def __repr__(self):
+        return f'< Favorite {self.id}: park {self.park_id} for user {self.user_id} >'
+
+class Note(db.Model):
+    """Mapping a user to a park with a note"""
+
+    __tablename__ = 'notes'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    park_id = db.Column(db.String(10), db.ForeignKey('parks.park_code', ondelete='cascade'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'))
+    text = db.Column(db.Text)
+
+    def __repr__(self):
+        return f'< Note {self.id}: park {self.park_id} for user {self.user_id} >'
+
 
 class Activity(db.Model):
     """Model for an activity"""
@@ -135,56 +215,4 @@ class Topic(db.Model):
 
         # Add list of topics to the db
         db.session.add_all(topics)
-        db.session.commit()
-
-
-class Park(db.Model):
-    """Model for a park"""
-
-    __tablename__ = 'parks'
-
-    park_code = db.Column(db.String(10), primary_key=True, unique=True)
-    full_name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    image_url = db.Column(db.Text, nullable=False)
-    image_alt = db.Column(db.Text, nullable=False)
-
-    def __repr__(self):
-        return f'< Park {self.park_code}: {self.full_name} >'
-    
-    @classmethod
-    def populate_table(cls):
-        """Request parks data from the NPS API and use it to populate
-           the parks table in the database"""
-        
-        # Delete any records currently in the table
-        cls.query.delete()
-        
-        parks = []
-
-        # Make request to API
-        url = f'{BASE_URL}/parks?limit=500&api_key={NPS_API_KEY}'
-        response = urllib.request.urlopen(url)
-
-        res_body = response.read()
-        data = json.loads(res_body.decode("utf-8"))
-
-        parks_list = data['data']
-
-        # From the data, create new Park objects and append to list
-        for item in parks_list:
-            if item['images']:
-                img_url=item['images'][0]['url']
-                img_alt=item['images'][0]['altText']
-            else:
-                img_url='https://placehold.co/400x300?text=No+Image'
-                img_alt='no default image'
-
-            park = Park(park_code=item['parkCode'], full_name=item['fullName'], \
-                        description=item['description'], image_url=img_url, image_alt=img_alt)
-            parks.append(park)
-
-        # Add list of parks to the db
-        db.session.add_all(parks)
-        db.session.commit()
-    
+        db.session.commit()    
