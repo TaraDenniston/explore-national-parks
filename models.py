@@ -1,5 +1,4 @@
 import urllib.request, json
-# from flask import g
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from keys import NPS_API_KEY
@@ -143,7 +142,7 @@ class Activity(db.Model):
 
     __tablename__ = 'activities'
 
-    id = db.Column(db.String(40), primary_key=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(50), nullable=False)
 
     def __repr__(self):
@@ -170,12 +169,26 @@ class Activity(db.Model):
 
         # From the data, create new activity objects and append to list
         for item in activities_list:
-            activity = Activity(id=item['id'], name=item['name'])
+            activity = Activity(name=item['name'])
             activities.append(activity)
 
         # Add list of activities to the db
         db.session.add_all(activities)
         db.session.commit()
+
+    @classmethod
+    def create_json_file(cls):
+        """Create JSON file from populated table"""
+        activities = Activity.query.all()
+        activities_dict = []
+
+        # Create dictionary containing all activity ids and names
+        for a in activities:
+            activities_dict.append({'text': a.name, 'value': a.id})
+
+        # Write dictionary data to a file in JSON format
+        with open('static/activities.json', 'w') as outfile:
+            json.dump(activities_dict, outfile)
 
 
 class Topic(db.Model):
