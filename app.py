@@ -3,7 +3,7 @@ import urllib.request, json
 from flask import Flask, flash, jsonify, make_response, redirect, render_template, \
     session, g, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
-from forms import RegisterForm, LoginForm, SearchByStateForm
+from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityForm
 from keys import SECRET_KEY, NPS_API_KEY
 from models import BASE_URL, db, connect_db, User, Activity, Topic, Park, Favorite, Note
 from sqlalchemy.exc import IntegrityError
@@ -52,7 +52,6 @@ def update_favorite():
     db.session.commit()
 
     return
-
 
 
 #################################################################################
@@ -163,7 +162,7 @@ def display_profile(user_id):
 def display_homepage():
     """Display home page and make general requests to API to populate database"""
     
-    ### Search form for States ###
+    #####  Search form for States  #####
     statesForm = SearchByStateForm()
     
     # When states form is submitted
@@ -171,8 +170,17 @@ def display_homepage():
         # Get state from form data and redirect to search results
         state = (statesForm.state.data)
         return redirect(f'/search/states/{state}')
+    
+    #####  Search form for Activities  #####
+    activitiesForm = SearchByActivityForm()
+    
+    # When activities form is submitted
+    if activitiesForm.validate_on_submit():
+        # Get activity from form data and redirect to search results
+        activity = (activitiesForm.activity.data)
+        return redirect(f'/search/activities/{activity}')
 
-    return render_template('index.html', statesForm=statesForm)
+    return render_template('index.html', statesForm=statesForm, activitiesForm=activitiesForm)
 
 @app.route('/search/states/<state>', methods=["GET", "POST"])
 def display_results_states(state):
