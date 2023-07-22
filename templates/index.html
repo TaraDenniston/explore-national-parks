@@ -26,9 +26,9 @@
       <h3 class="card-title">Search by State</h3>
       <form method="post">
         <div class="form-group">
-          {{ statesForm.hidden_tag() }}
+          {{ states_form.hidden_tag() }}
 
-          {% for field in statesForm if field.widget.input_type != 'hidden' %}
+          {% for field in states_form if field.widget.input_type != 'hidden' %}
             <div class="form-group">
               {{ field.label }}
               {{ field(class="form-control") }}
@@ -57,9 +57,9 @@
       <h3 class="card-title">Search by Activity</h3>
       <form method="post">
         <div class="form-group">
-          {{ activitiesForm.hidden_tag() }}
+          {{ activities_form.hidden_tag() }}
 
-          {% for field in activitiesForm if field.widget.input_type != 'hidden' %}
+          {% for field in activities_form if field.widget.input_type != 'hidden' %}
             <div class="form-group">
               {{ field.label }}
               {{ field(class="form-control") }}
@@ -86,15 +86,27 @@
         <path d="M512 32c0 113.6-84.6 207.5-194.2 222c-7.1-53.4-30.6-101.6-65.3-139.3C290.8 46.3 364 0 448 0h32c17.7 0 32 14.3 32 32zM0 96C0 78.3 14.3 64 32 64H64c123.7 0 224 100.3 224 224v32V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V320C100.3 320 0 219.7 0 96z"/>
       </svg>
       <h3 class="card-title">Search by Topic</h3>
-      <form action="">
-        <a href="#" class="btn btn-lg btn-primary m-3">Search</a>
+      <form method="post">
+        <div class="form-group">
+          {{ topics_form.hidden_tag() }}
+
+          {% for field in topics_form if field.widget.input_type != 'hidden' %}
+            <div class="form-group">
+              {{ field.label }}
+              {{ field(class="form-control") }}
+          
+              {% for error in field.errors %}
+              <span class="font-italic text-danger">{{ error }}</span>
+              {% endfor %}
+            </div>
+          {% endfor %}
+
+          <button type="submit" class="btn btn-lg btn-primary m-3">Search</button>
+        </div>
       </form>
     </div>
   </div>
-
+  
 </div>
-
-
-<h3><a href="/topics">Topics</a></h3>
 
 {% endblock %}
