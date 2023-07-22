@@ -28,8 +28,8 @@ connect_db(app)
 # Helper functions
 #################################################################################
 
-# Receive data from ajax request and use it to update user's list of favorites
 def update_favorite():
+    """Receive data from ajax request and use it to update user's list of favorites"""
     request_data = request.get_json()
     fav_data = json.loads(request_data)
 
@@ -54,8 +54,8 @@ def update_favorite():
 
     return
 
-# Create a list of just the park codes of favorited parks for a user
 def create_favorites_list(user_id):
+    """Create a list of just the park codes of favorited parks for a user"""
     list = []
 
     # Make user object
@@ -70,8 +70,8 @@ def create_favorites_list(user_id):
 
     return list
 
-# Create a list of park objects from data returned from the API
 def create_parks_list(data):
+    """Create a list of park objects from data returned from the API"""
     list = []
 
     for obj in data:
@@ -85,6 +85,19 @@ def create_parks_list(data):
         list.append(park)
     
     return list
+
+def lookup_state(state_code):
+    """Use 2-digit state code to get full state name"""
+
+    # Turn JSON file into list of Python dictionaries
+    with open('static/states.json') as file:
+        states_data = json.load(file)
+    
+    # Find dictionary containing our state code
+    state_dict = next(item for item in states_data if item['value'] == state_code)
+
+    # Return name of state
+    return state_dict['text']
 
 
 #################################################################################
@@ -222,8 +235,8 @@ def display_homepage():
         topic = (topics_form.topic.data)
         return redirect(f'/search/topics/{topic}')
 
-    return render_template('index.html', states_form=states_form, activities_form=activities_form, \
-                           topics_form=topics_form)
+    return render_template('index.html', states_form=states_form, topics_form=topics_form, \
+                           activities_form=activities_form)
 
 @app.route('/search/states/<state>', methods=["GET", "POST"])
 def display_results_states(state):
@@ -237,6 +250,7 @@ def display_results_states(state):
     data = json.loads(res_body.decode("utf-8"))
 
     parks =  create_parks_list(data['data'])
+    name = lookup_state(state)
    
     favorites = []
     if g.user:
@@ -249,61 +263,64 @@ def display_results_states(state):
         update_favorite()
         return ('', 204)
 
-    return render_template('results.html', parks=parks, url=url, favorites=favorites)
+    return render_template('results.html', parks=parks, name=name, url=url, \
+                           favorites=favorites)
 
-@app.route('/search/activities/<activity>', methods=["GET", "POST"])
-def display_results_activities(activity):
+@app.route('/search/activities/<activity_id>', methods=["GET", "POST"])
+def display_results_activities(activity_id):
     """Display search results by activity"""
-    encoded_activity = urllib.parse.quote(activity)
 
     # Make request to API
-    api_url = f'{BASE_URL}/activities/parks?q={encoded_activity}&api_key={NPS_API_KEY}'
+    api_url = f'{BASE_URL}/activities/parks?id={activity_id}&api_key={NPS_API_KEY}'
     response = urllib.request.urlopen(api_url)
 
     res_body = response.read()
     data = json.loads(res_body.decode("utf-8"))
 
     parks =  create_parks_list(data['data'][0]['parks'])
+    name = data['data'][0]['name']
    
     favorites = []
     if g.user:
         favorites = create_favorites_list(g.user.id)
     
-    url = url_for('display_results_activities', activity=activity)
+    url = url_for('display_results_activities', activity_id=activity_id)
 
     # If the page sends a POST request regarding favorite status for a park
     if request.method == "POST":
         update_favorite()
         return ('', 204)
 
-    return render_template('results.html', parks=parks, url=url, favorites=favorites)
+    return render_template('results.html', parks=parks, name=name, url=url, \
+                           favorites=favorites)
 
-@app.route('/search/topics/<topic>', methods=["GET", "POST"])
-def display_results_topics(topic):
+@app.route('/search/topics/<topic_id>', methods=["GET", "POST"])
+def display_results_topics(topic_id):
     """Display search results by topic"""
-    encoded_topic = urllib.parse.quote(topic)
 
     # Make request to API
-    api_url = f'{BASE_URL}/topics/parks?q={encoded_topic}&api_key={NPS_API_KEY}'
+    api_url = f'{BASE_URL}/topics/parks?id={topic_id}&api_key={NPS_API_KEY}'
     response = urllib.request.urlopen(api_url)
 
     res_body = response.read()
     data = json.loads(res_body.decode("utf-8"))
 
     parks =  create_parks_list(data['data'][0]['parks'])
+    name = data['data'][0]['name']
    
     favorites = []
     if g.user:
         favorites = create_favorites_list(g.user.id)
     
-    url = url_for('display_results_topics', topic=topic)
+    url = url_for('display_results_topics', topic_id=topic_id)
 
     # If the page sends a POST request regarding favorite status for a park
     if request.method == "POST":
         update_favorite()
         return ('', 204)
 
-    return render_template('results.html', parks=parks, url=url, favorites=favorites)
+    return render_template('results.html', parks=parks, name=name, url=url, \
+                           favorites=favorites)
 
 
 #################################################################################
@@ -316,5 +333,40 @@ def display_park_details(park_code):
     if the user is logged in"""
 
     park = Park.query.get_or_404(park_code)
+    park_data = park.get_park_details()
 
-    return render_template('park.html', park=park)
+    # Get list of states related to the park
+    states_list = park_data['states']
+    state_codes = states_list.split(',')
+    states = []
+    for code in state_codes:
+        states.append(lookup_state(code))
+    states_str = states[0]
+    if len(states) > 1:
+        for item in states[1:]:
+            states_str += ', ' + item
+
+    # Get list of activities related to the park
+    activities_list = park_data['activities']
+    activities = []
+    for item in activities_list:
+        activities.append(item['name'])
+    activities_str = activities[0]
+    if len(activities) > 1:
+        for item in activities[1:]:
+            activities_str += ', ' + item
+
+    # Get list of topics related to the park
+    topics_list = park_data['topics']
+    topics = []
+    for item in topics_list:
+        topics.append(item['name'])
+    topics_str = topics[0]
+    if len(topics) > 1:
+        for item in topics[1:]:
+            topics_str += ', ' + item
+
+    park_url = park_data['url']
+
+    return render_template('park.html', park=park, park_url=park_url, states=states_str, \
+                           activities=activities_str, topics=topics_str)
