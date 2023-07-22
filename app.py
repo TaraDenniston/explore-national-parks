@@ -3,9 +3,10 @@ import urllib.request, json
 from flask import Flask, flash, jsonify, make_response, redirect, render_template, \
     session, g, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
-from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityForm
+from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityForm, \
+    SearchByTopicForm
 from keys import SECRET_KEY, NPS_API_KEY
-from models import BASE_URL, db, connect_db, User, Activity, Topic, Park, Favorite, Note
+from models import BASE_URL, db, connect_db, User, Park, Favorite, Note
 from sqlalchemy.exc import IntegrityError
 
 CURR_USER_KEY = "none"
@@ -160,27 +161,37 @@ def display_profile(user_id):
 
 @app.route('/', methods=["GET", "POST"])
 def display_homepage():
-    """Display home page and make general requests to API to populate database"""
+    """Display home page"""
     
     #####  Search form for States  #####
-    statesForm = SearchByStateForm()
+    states_form = SearchByStateForm()
     
     # When states form is submitted
-    if statesForm.validate_on_submit():
+    if states_form.validate_on_submit():
         # Get state from form data and redirect to search results
-        state = (statesForm.state.data)
+        state = (states_form.state.data)
         return redirect(f'/search/states/{state}')
     
     #####  Search form for Activities  #####
-    activitiesForm = SearchByActivityForm()
+    activities_form = SearchByActivityForm()
     
     # When activities form is submitted
-    if activitiesForm.validate_on_submit():
+    if activities_form.validate_on_submit():
         # Get activity from form data and redirect to search results
-        activity = (activitiesForm.activity.data)
+        activity = (activities_form.activity.data)
         return redirect(f'/search/activities/{activity}')
+    
+    #####  Search form for Topics  #####
+    topics_form = SearchByTopicForm()
+    
+    # When topics form is submitted
+    if topics_form.validate_on_submit():
+        # Get activity from form data and redirect to search results
+        topic = (topics_form.topic.data)
+        return redirect(f'/search/topics/{topic}')
 
-    return render_template('index.html', statesForm=statesForm, activitiesForm=activitiesForm)
+    return render_template('index.html', states_form=states_form, activities_form=activities_form, \
+                           topics_form=topics_form)
 
 @app.route('/search/states/<state>', methods=["GET", "POST"])
 def display_results_states(state):
@@ -241,15 +252,6 @@ def display_park_details(park_code):
     return render_template('park.html', park=park)
 
 
-
-@app.route('/activities')
-def display_activities():
-    """Display list of all activities"""
-
-    # Pull list of activities from database
-    activities = Activity.query.all()
-
-    return render_template('activities.html', activities=activities)
 
 @app.route('/topics')
 def display_topics():
