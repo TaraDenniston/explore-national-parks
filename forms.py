@@ -6,10 +6,9 @@ from wtforms.validators import InputRequired, Length
 # Parse JSON files into Python dictionaries
 with open('static/states.json') as file:
     states = json.load(file)
-# statesList = [(item['value'], item['text']) for item in states]
-
 with open('static/activities.json') as file:
-    activities = json.load(file)
+    data = json.load(file)
+activities = data['data']
 
 
 class RegisterForm(FlaskForm):
@@ -33,5 +32,5 @@ class SearchByStateForm(FlaskForm):
 class SearchByActivityForm(FlaskForm):
     """Form for searching parks by activity."""
     activity = SelectField('', 
-                           choices = [('', '')] + [(item['value'], item['text']) for item in activities],
+                           choices = [('', '')] + [(item['name'], item['name']) for item in activities],
                            validators=[InputRequired()])
