@@ -11,12 +11,15 @@
 
 {% block content %}
 
-<h2>{{ park.full_name }}</h2>
+<h2 class="my-4">{{ park.full_name }}</h2>
 <p>{{ park.description }}</p>
-<a href="{{ park.url }}">Visit Official Park Website</a>
+<a href="{{ park_url }}">Visit Official Park Website</a><br><br>
+<p><strong>List of States:</strong> {{ states }}</p>
+<p><strong>List of Activities:</strong> {{ activities }}</p>
+<p><strong>List of Topics:</strong> {{ topics }}</p>
 
+<h3 class="my-4">Notes</h3>
 {% if park.note %}
-<h3>Notes</h3>
 <p>{{ park.note }}</p>
 {% endif %}
 
