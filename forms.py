@@ -35,11 +35,11 @@ class SearchByStateForm(FlaskForm):
 class SearchByActivityForm(FlaskForm):
     """Form for searching parks by activity"""
     activity = SelectField('', 
-                           choices = [('', '')] + [(item['name'], item['name']) for item in activities],
+                           choices = [('', '')] + [(item['id'], item['name']) for item in activities],
                            validators=[InputRequired()])
     
 class SearchByTopicForm(FlaskForm):
     """Form for searching parks by topic"""
     topic = SelectField('', 
-                           choices = [('', '')] + [(item['name'], item['name']) for item in topics],
+                           choices = [('', '')] + [(item['id'], item['name']) for item in topics],
                            validators=[InputRequired()])
