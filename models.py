@@ -109,6 +109,17 @@ class Park(db.Model):
         # Add list of parks to the db
         db.session.add_all(parks)
         db.session.commit()
+    
+    def get_park_details(self):
+
+        # Make request to API
+        url = f'{BASE_URL}/parks?parkCode={self.park_code}&api_key={NPS_API_KEY}'
+        response = urllib.request.urlopen(url)
+
+        res_body = response.read()
+        data = json.loads(res_body.decode("utf-8"))
+
+        return data['data'][0]
 
 
 class Favorite(db.Model):
