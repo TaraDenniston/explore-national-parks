@@ -1,5 +1,5 @@
 import os
-import urllib.request, json
+import urllib.request, urllib.parse, json
 from flask import Flask, flash, jsonify, make_response, redirect, render_template, \
     session, g, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
@@ -53,6 +53,38 @@ def update_favorite():
     db.session.commit()
 
     return
+
+# Create a list of just the park codes of favorited parks for a user
+def create_favorites_list(user_id):
+    list = []
+
+    # Make user object
+    user = User.query.get(user_id)
+
+    # Pull list of favorite parks from user object
+    favorite_parks = user.favorites
+
+    # Add park code to favorites list
+    for park in favorite_parks:
+        list.append(park.park_code)
+
+    return list
+
+# Create a list of park objects from data returned from the API
+def create_parks_list(data):
+    list = []
+
+    for obj in data:
+        # Grab the park_code from the park data
+        park_code = obj['parkCode']
+
+        # Find the Park object with the code
+        park = Park.query.get(park_code)
+
+        # Add the Park object to the list
+        list.append(park)
+    
+    return list
 
 
 #################################################################################
@@ -204,31 +236,67 @@ def display_results_states(state):
     res_body = response.read()
     data = json.loads(res_body.decode("utf-8"))
 
-    parks = []
-    for obj in data['data']:
-        # Grab the park_code from the park data
-        park_code = obj['parkCode']
-
-        # Find the Park object with the code
-        park = Park.query.get(park_code)
-
-        # Add the Park object to the list
-        parks.append(park)
-
+    parks =  create_parks_list(data['data'])
+   
     favorites = []
     if g.user:
-        # Make user object
-        user = User.query.get(g.user.id)
-
-        # Pull list of favorite parks from user object
-        favorite_parks = user.favorites
-
-        # Add park code to favorites list
-        for park in favorite_parks:
-            favorites.append(park.park_code)
+        favorites = create_favorites_list(g.user.id)
 
     url = url_for('display_results_states', state=state)
 
+    # If the page sends a POST request regarding favorite status for a park
+    if request.method == "POST":
+        update_favorite()
+        return ('', 204)
+
+    return render_template('results.html', parks=parks, url=url, favorites=favorites)
+
+@app.route('/search/activities/<activity>', methods=["GET", "POST"])
+def display_results_activities(activity):
+    """Display search results by activity"""
+    encoded_activity = urllib.parse.quote(activity)
+
+    # Make request to API
+    api_url = f'{BASE_URL}/activities/parks?q={encoded_activity}&api_key={NPS_API_KEY}'
+    response = urllib.request.urlopen(api_url)
+
+    res_body = response.read()
+    data = json.loads(res_body.decode("utf-8"))
+
+    parks =  create_parks_list(data['data'][0]['parks'])
+   
+    favorites = []
+    if g.user:
+        favorites = create_favorites_list(g.user.id)
+    
+    url = url_for('display_results_activities', activity=activity)
+
+    # If the page sends a POST request regarding favorite status for a park
+    if request.method == "POST":
+        update_favorite()
+        return ('', 204)
+
+    return render_template('results.html', parks=parks, url=url, favorites=favorites)
+
+@app.route('/search/topics/<topic>', methods=["GET", "POST"])
+def display_results_topics(topic):
+    """Display search results by topic"""
+    encoded_topic = urllib.parse.quote(topic)
+
+    # Make request to API
+    api_url = f'{BASE_URL}/topics/parks?q={encoded_topic}&api_key={NPS_API_KEY}'
+    response = urllib.request.urlopen(api_url)
+
+    res_body = response.read()
+    data = json.loads(res_body.decode("utf-8"))
+
+    parks =  create_parks_list(data['data'][0]['parks'])
+   
+    favorites = []
+    if g.user:
+        favorites = create_favorites_list(g.user.id)
+    
+    url = url_for('display_results_topics', topic=topic)
 
     # If the page sends a POST request regarding favorite status for a park
     if request.method == "POST":
@@ -250,14 +318,3 @@ def display_park_details(park_code):
     park = Park.query.get_or_404(park_code)
 
     return render_template('park.html', park=park)
-
-
-
-@app.route('/topics')
-def display_topics():
-    """Display list of all topics"""
-
-    # Pull list of topics from database
-    topics = Topic.query.all()
-
-    return render_template('topics.html', topics=topics)
