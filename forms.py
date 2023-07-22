@@ -7,8 +7,11 @@ from wtforms.validators import InputRequired, Length
 with open('static/states.json') as file:
     states = json.load(file)
 with open('static/activities.json') as file:
-    data = json.load(file)
-activities = data['data']
+    activities_data = json.load(file)
+activities = activities_data['data']
+with open('static/topics.json') as file:
+    topics_data = json.load(file)
+topics = topics_data['data']
 
 
 class RegisterForm(FlaskForm):
@@ -24,13 +27,19 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[InputRequired()])
 
 class SearchByStateForm(FlaskForm):
-    """Form for searching parks by state."""
+    """Form for searching parks by state"""
     state = SelectField('', 
                         choices = [('', '')] + [(item['value'], item['text']) for item in states],
                         validators=[InputRequired()])
     
 class SearchByActivityForm(FlaskForm):
-    """Form for searching parks by activity."""
+    """Form for searching parks by activity"""
     activity = SelectField('', 
                            choices = [('', '')] + [(item['name'], item['name']) for item in activities],
+                           validators=[InputRequired()])
+    
+class SearchByTopicForm(FlaskForm):
+    """Form for searching parks by topic"""
+    topic = SelectField('', 
+                           choices = [('', '')] + [(item['name'], item['name']) for item in topics],
                            validators=[InputRequired()])
