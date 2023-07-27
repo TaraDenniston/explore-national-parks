@@ -25,6 +25,7 @@ class User(db.Model):
     last_name = db.Column(db.String(30), nullable=False)
 
     favorites = db.relationship('Park', secondary='favorites')
+    notes = db.relationship('Note')
 
     def __repr__(self):
         return f'< User {self.id}: {self.email}, {self.first_name}, {self.last_name} >'
@@ -135,7 +136,7 @@ class Favorite(db.Model):
         return f'< Favorite {self.id}: park {self.park_id} for user {self.user_id} >'
 
 class Note(db.Model):
-    """Mapping a user to a park with a note"""
+    """Mapping a user to a note for a park"""
 
     __tablename__ = 'notes'
 
