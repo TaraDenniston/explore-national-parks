@@ -4,12 +4,12 @@ from wtforms import StringField, PasswordField, EmailField, SelectField, TextAre
 from wtforms.validators import InputRequired, Length
 
 # Parse JSON files into Python dictionaries
-with open('static/states.json') as file:
+with open('static/json/states.json') as file:
     states = json.load(file)
-with open('static/activities.json') as file:
+with open('static/json/activities.json') as file:
     activities_data = json.load(file)
 activities = activities_data['data']
-with open('static/topics.json') as file:
+with open('static/json/topics.json') as file:
     topics_data = json.load(file)
 topics = topics_data['data']
 

@@ -14,7 +14,7 @@ def create_activities_json_file():
     data = response.read().decode("UTF-8")
 
     # Create JSON file
-    with open('static/activities.json', 'w') as outfile:
+    with open('static/json/activities.json', 'w') as outfile:
         outfile.write(data)
 
     return
@@ -30,7 +30,7 @@ def create_topics_json_file():
     data = response.read().decode("UTF-8")
 
     # Create JSON file
-    with open('static/topics.json', 'w') as outfile:
+    with open('static/json/topics.json', 'w') as outfile:
         outfile.write(data)
 
     return
