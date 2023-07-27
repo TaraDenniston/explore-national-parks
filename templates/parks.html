@@ -1,11 +1,54 @@
 {% extends "base.html" %}
 
-{% block title %}Explore National Parks - {{park.full_name}}{% endblock %}
+{% block title %}Explore National Parks - Park detail for {{ park.full_name }}{% endblock %}
+
+{% block hero %}
+  <img class="pt-5" style="max-width: 100vw;"
+       src="{{ park.image_url }}" 
+       alt="{{ park.image_alt }}">
+{% endblock %}
+
 
 {% block content %}
 
-<h1>{{park.full_name}}</h1>
-<img src="" alt="">
+<h1 class="my-4">
+  {{ park.full_name }}
+  {% include "favorite.html" %} 
+</h1>
+<p>{{ park.description }}</p>
+<h5>
+  <a class="text-dark" href="{{ park_url }}" target="_blank">
+    Visit Official Park Website
+  </a><br><br>
+</h5>
+<p><strong>List of States:</strong> {{ states }}</p>
+<p><strong>List of Activities:</strong> {{ activities }}</p>
+<p><strong>List of Topics:</strong> {{ topics }}</p>
 
+<h3 class="my-4">Notes</h3>
+{% if g.user %}
+<p>{{ note }}</p>
+<form action="/edit-note">
+  <button type="submit" class="btn btn-primary">Edit Notes</button>
+</form>
+{% else %}
+<p>Please log in to view or add notes.</p>
+{% endif %}
+
+<h3 class="my-4">Images</h3>
+<div class="row position-relative">
+  {% for image in images %}
+  <div class="card col m-3 p-0" style="min-width: 18rem; max-width: 18rem;">
+    <img class="card-img-top"
+        src="{{ image['url'] }}" 
+        alt="{{ image['alt'] }}">
+    <div class="card-body">
+      <h5 class="card-title">{{ image['title'] }}</h5>
+      <p class="card-text">{{ image['caption'] }}</p>
+      <a href="{{ image['url'] }}" target="_blank" class="stretched-link"></a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
 
 {% endblock %}
