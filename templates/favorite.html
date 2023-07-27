@@ -1,0 +1,38 @@
+{% block favorite %}
+
+{% if g.user %} 
+  {% if park.park_code in favorites %}
+  <i class="fav fa-solid fa-star" 
+     id="{{ park.park_code }}"
+     data-park="{{ park.park_code }}"
+     data-user="{{ g.user.id }}"
+     data-url="{{ url }}"
+     data-fav="true" 
+     data-toggle="tooltip"
+     data-placement="right"
+     title="Remove favorite"                
+     style="color: #f7d702;">
+  </i>
+  {% else %}
+  <i class="fav fa-regular fa-star" 
+     id="{{ park.park_code }}"
+     data-park="{{ park.park_code }}"
+     data-user="{{ g.user.id }}"
+     data-url="{{ url }}"
+     data-fav="false"
+     data-toggle="tooltip"
+     data-placement="right"
+     title="Mark as favorite" 
+     style="color: #8a8a8a;">
+  </i>
+  {% endif %}
+{% else %}
+<i class="fav fa-regular fa-star"
+   data-fav="false"
+   style="color: #8a8a8a;"
+   data-toggle="popover"
+   data-content="Please log in to add a park to favorites">
+</i>
+{% endif %}
+
+{% endblock %}
