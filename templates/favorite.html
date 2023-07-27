@@ -1,7 +1,7 @@
 {% block favorite %}
 
 {% if g.user %} 
-  {% if park.park_code in favorites %}
+  {% if park.park_code in favorite_codes %}
   <i class="fav fa-solid fa-star" 
      id="{{ park.park_code }}"
      data-park="{{ park.park_code }}"

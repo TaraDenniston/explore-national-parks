@@ -7,7 +7,7 @@
 <h2 class="my-4">User Profile</h2>
 <h3>{{ user.first_name }} {{ user.last_name }}</h3>
 <p>{{ user.email }}</p>
-<form action="/edit-user">
+<form action="/edit-user/">
   <button type="submit" class="btn btn-primary">Edit User</button>
 </form>
 
@@ -20,17 +20,7 @@
       <div class="row">
         <div class="col">
           <h5 class="card-title">{{ park.full_name }}
-            <i class="fav fa-solid fa-star" 
-               id="{{ park.park_code }}"
-               data-park="{{ park.park_code }}"
-               data-user="{{ g.user.id }}"
-               data-url="{{ url }}"
-               data-fav="true" 
-               data-toggle="tooltip"
-               data-placement="right"
-               title="Remove favorite"                
-               style="color: #f7d702;">
-            </i>
+            {% include "favorite.html" %}
           </h5>
           <p class="card-text">{{ park.description }}</p>
           <a href="/parks/{{ park.park_code }}" class="btn btn-primary">More Information</a>
