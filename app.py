@@ -70,6 +70,39 @@ def create_favorites_list(user_id):
 
     return list
 
+def create_notes_list(user_id):
+    """Create a list of just the park codes of notes for a user"""
+    list = []
+
+    # Make user object
+    user = User.query.get(user_id)
+
+    # Pull list of utes from user object
+    notes = user.notes
+
+    # Add park code to favorites list
+    for note in notes:
+        list.append(note.park_id)
+
+    return list
+
+def get_note_text(park_code):
+    """Return text of note for a park"""
+    if g.user:
+        # Get list of user's notes
+        notes = create_notes_list(g.user.id)
+
+        # If the user has a note for the park, return the text
+        if park_code in notes:
+            note = Note.query.filter_by(park_id=park_code).first()
+            return note.text
+        # Otherwise return an empty string
+        else:
+            return ''
+    else:
+        return ''
+
+
 def create_parks_list(data):
     """Create a list of park objects from data returned from the API"""
     list = []
@@ -90,7 +123,7 @@ def lookup_state(state_code):
     """Use 2-digit state code to get full state name"""
 
     # Turn JSON file into list of Python dictionaries
-    with open('static/states.json') as file:
+    with open('static/json/states.json') as file:
         states_data = json.load(file)
     
     # Find dictionary containing our state code
@@ -366,7 +399,28 @@ def display_park_details(park_code):
         for item in topics[1:]:
             topics_str += ', ' + item
 
+    # Get url of official park website
     park_url = park_data['url']
 
-    return render_template('park.html', park=park, park_url=park_url, states=states_str, \
-                           activities=activities_str, topics=topics_str)
+    # Get the note text (empty string if it doesn't exist)
+    note = get_note_text(park_code)
+
+    # Get data for images
+    images = park_data['images']
+
+    # Get list of park_codes from favorite parks
+    favorites = []
+    if g.user:
+        favorites = create_favorites_list(g.user.id)
+    
+    url = url_for('display_park_details', park_code=park_code)
+
+    # If the page sends a POST request regarding favorite status for a park
+    if request.method == "POST":
+        update_favorite()
+        return ('', 204)
+    
+
+    return render_template('parks.html', park=park, park_url=park_url, states=states_str, \
+                           activities=activities_str, topics=topics_str, note=note, \
+                           images=images, favorites=favorites, url=url)
