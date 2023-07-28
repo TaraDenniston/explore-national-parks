@@ -197,7 +197,7 @@ def login_user():
             flash('You have successfully logged in', 'success')
             return redirect(f'/profile/{user.id}')
         
-        flash('The credentials you entered are invalid')
+        flash('The credentials you entered are invalid', 'danger')
     
     return render_template('login.html', form=form)
 
@@ -224,13 +224,43 @@ def display_profile(user_id):
     url = url_for('display_profile', user_id=user_id)
     favorites = user.favorites
 
+    favorite_codes = create_favorites_list(g.user.id)
+
     if request.method == "POST":
         update_favorite()
         # We don't want the page to refresh when the POST request is made,
         # so we send a status of 204 No Content back to the request
         return ('', 204)
     
-    return render_template('profile.html', user=user, url=url, favorites=favorites)
+    return render_template('profile.html', user=user, url=url, favorites=favorites, \
+                           favorite_codes=favorite_codes)
+
+@app.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
+def edit_user(user_id):
+    # Redirect if there is no current user
+    if not g.user:
+        flash('Please log in', 'danger')
+        return redirect('/login')
+    
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        # Use form data to register user
+        email = form.email.data
+        password = form.password.data
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+
+        try:
+            new_user = User.register(email, password, first_name, last_name)            
+        except IntegrityError:
+            flash("Email already exists in database", 'danger')
+            return render_template('register.html', form=form)
+
+        login(new_user)
+        return redirect(f'/profile/{new_user.id}')
+
+    return render_template('register.html', form=form)
 
 
 #################################################################################
@@ -285,9 +315,9 @@ def display_results_states(state):
     parks =  create_parks_list(data['data'])
     name = lookup_state(state)
    
-    favorites = []
+    favorite_codes = []
     if g.user:
-        favorites = create_favorites_list(g.user.id)
+        favorite_codes = create_favorites_list(g.user.id)
 
     url = url_for('display_results_states', state=state)
 
@@ -297,7 +327,7 @@ def display_results_states(state):
         return ('', 204)
 
     return render_template('results.html', parks=parks, name=name, url=url, \
-                           favorites=favorites)
+                           favorite_codes=favorite_codes)
 
 @app.route('/search/activities/<activity_id>', methods=["GET", "POST"])
 def display_results_activities(activity_id):
@@ -313,9 +343,9 @@ def display_results_activities(activity_id):
     parks =  create_parks_list(data['data'][0]['parks'])
     name = data['data'][0]['name']
    
-    favorites = []
+    favorite_codes = []
     if g.user:
-        favorites = create_favorites_list(g.user.id)
+        favorite_codes = create_favorites_list(g.user.id)
     
     url = url_for('display_results_activities', activity_id=activity_id)
 
@@ -325,7 +355,7 @@ def display_results_activities(activity_id):
         return ('', 204)
 
     return render_template('results.html', parks=parks, name=name, url=url, \
-                           favorites=favorites)
+                           favorite_codes=favorite_codes)
 
 @app.route('/search/topics/<topic_id>', methods=["GET", "POST"])
 def display_results_topics(topic_id):
@@ -341,9 +371,9 @@ def display_results_topics(topic_id):
     parks =  create_parks_list(data['data'][0]['parks'])
     name = data['data'][0]['name']
    
-    favorites = []
+    favorite_codes = []
     if g.user:
-        favorites = create_favorites_list(g.user.id)
+        favorite_codes = create_favorites_list(g.user.id)
     
     url = url_for('display_results_topics', topic_id=topic_id)
 
@@ -353,14 +383,14 @@ def display_results_topics(topic_id):
         return ('', 204)
 
     return render_template('results.html', parks=parks, name=name, url=url, \
-                           favorites=favorites)
+                           favorite_codes=favorite_codes)
 
 
 #################################################################################
 # Park routes
 #################################################################################
 
-@app.route('/parks/<park_code>')
+@app.route('/parks/<park_code>', methods=["GET", "POST"])
 def display_park_details(park_code):
     """Display all the details of one park, including notes and favorite status
     if the user is logged in"""
@@ -409,18 +439,17 @@ def display_park_details(park_code):
     images = park_data['images']
 
     # Get list of park_codes from favorite parks
-    favorites = []
+    favorite_codes = []
     if g.user:
-        favorites = create_favorites_list(g.user.id)
+        favorite_codes = create_favorites_list(g.user.id)
     
     url = url_for('display_park_details', park_code=park_code)
 
     # If the page sends a POST request regarding favorite status for a park
     if request.method == "POST":
         update_favorite()
-        return ('', 204)
-    
+        return ('', 204)    
 
     return render_template('parks.html', park=park, park_url=park_url, states=states_str, \
                            activities=activities_str, topics=topics_str, note=note, \
-                           images=images, favorites=favorites, url=url)
+                           images=images, favorite_codes=favorite_codes, url=url)
