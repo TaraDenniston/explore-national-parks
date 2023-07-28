@@ -1,0 +1,15 @@
+// Custom.scss
+
+@import "../bootstrap/scss/functions";
+
+// Global variable overrides
+$primary: #2e7035;
+$secondary: #5a6169;
+$success: #2e7035;
+$danger: #c92d19;
+$card-bg: #e6e4df;
+$border-color-translucent: rgba(129, 124, 110, 0.507);
+
+@import "../bootstrap/scss/bootstrap";
+@import "../fontawesome/css/all.min.css";
+
