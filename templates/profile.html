@@ -7,8 +7,11 @@
 <h2 class="my-4">User Profile</h2>
 <h3>{{ user.first_name }} {{ user.last_name }}</h3>
 <p>{{ user.email }}</p>
-<form action="/edit-user/">
-  <button type="submit" class="btn btn-primary">Edit User</button>
+<form action="/edit-user/{{ user.id }}" class="d-inline">
+  <button type="submit" class="btn btn-primary">Edit User Details</button>
+</form>
+<form action="/edit-password/{{ user.id }}" class="d-inline">
+  <button type="submit" class="btn btn-primary mx-3">Change Password</button>
 </form>
 
 <h3 class="mt-5">Favorite Parks</h3>
