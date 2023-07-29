@@ -1,12 +1,11 @@
 import os
 import urllib.request, urllib.parse, json
-from flask import Flask, flash, jsonify, make_response, redirect, render_template, \
+from flask import Flask, flash, redirect, render_template, \
     session, g, request, url_for
-from flask_debugtoolbar import DebugToolbarExtension
 from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityForm, \
     SearchByTopicForm, EditUserForm, EditPasswordForm, EditNotesForm
 from keys import SECRET_KEY, NPS_API_KEY
-from models import BASE_URL, db, connect_db, User, Park, Favorite, Note
+from models import BASE_URL, db, connect_db, User, Park, Note
 from sqlalchemy.exc import IntegrityError
 
 CURR_USER_KEY = "none"
@@ -18,9 +17,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ.get('DATABASE_URL', 'postgresql:///explore_national_parks'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = SECRET_KEY
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-
-debug = DebugToolbarExtension(app)
 
 connect_db(app)
 
@@ -101,7 +97,6 @@ def get_note_text(park_code):
             return ''
     else:
         return ''
-
 
 def create_parks_list(data):
     """Create a list of park objects from data returned from the API"""
