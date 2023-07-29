@@ -4,7 +4,7 @@ from flask import Flask, flash, jsonify, make_response, redirect, render_templat
     session, g, request, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityForm, \
-    SearchByTopicForm
+    SearchByTopicForm, EditUserForm, EditPasswordForm, EditNotesForm
 from keys import SECRET_KEY, NPS_API_KEY
 from models import BASE_URL, db, connect_db, User, Park, Favorite, Note
 from sqlalchemy.exc import IntegrityError
@@ -77,7 +77,7 @@ def create_notes_list(user_id):
     # Make user object
     user = User.query.get(user_id)
 
-    # Pull list of utes from user object
+    # Pull list of notes from user object
     notes = user.notes
 
     # Add park code to favorites list
@@ -242,25 +242,65 @@ def edit_user(user_id):
         flash('Please log in', 'danger')
         return redirect('/login')
     
-    form = RegisterForm()
+    user = User.query.get_or_404(user_id)
+    form = EditUserForm()
+
+    if request.method == "POST":
+        if form.validate_on_submit():
+            # Use form data to update user
+            email = form.email.data
+            first_name = form.first_name.data
+            last_name = form.last_name.data
+
+            user.email = email
+            user.first_name = first_name
+            user.last_name = last_name
+
+            db.session.commit()
+
+            flash('User details updated successfully', 'success')
+            return redirect(f'/profile/{user_id}')
+    
+    form.email.data = user.email
+    form.first_name.data = user.first_name
+    form.last_name.data = user.last_name
+
+    return render_template('edit-user.html', form=form)
+
+@app.route('/edit-password/<int:user_id>', methods=['GET', 'POST'])
+def edit_password(user_id):
+    # Redirect if there is no current user
+    if not g.user:
+        flash('Please log in', 'danger')
+        return redirect('/login')
+    
+    user = User.query.get_or_404(user_id)
+    form = EditPasswordForm()
 
     if form.validate_on_submit():
-        # Use form data to register user
-        email = form.email.data
-        password = form.password.data
-        first_name = form.first_name.data
-        last_name = form.last_name.data
+        # Get data from form        
+        curr_pw = form.curr_pw.data
+        new_pw_1 = form.new_pw_1.data
+        new_pw_2 = form.new_pw_2.data
 
-        try:
-            new_user = User.register(email, password, first_name, last_name)            
-        except IntegrityError:
-            flash("Email already exists in database", 'danger')
-            return render_template('register.html', form=form)
+        # Make sure current password matches data submitted
+        if user.authenticate(user.email, curr_pw):
+            # Make sure new passwords are identical
+            if new_pw_1 == new_pw_2:
+                # change stored password and display success message
+                user.update_pw(new_pw_1)
+                flash('Password updated successfully', 'success')
+                return redirect(f'/profile/{user_id}')
+            else:
+                # If new passwords don't match, show error message
+                flash("New passwords don't match", 'danger')
+                return redirect(f'/edit-password/{user_id}')
+        else:
+            # If data for current password is incorrect, show message
+            flash('Password is incorrect', 'danger')
+            return redirect(f'/edit-password/{user_id}')
 
-        login(new_user)
-        return redirect(f'/profile/{new_user.id}')
-
-    return render_template('register.html', form=form)
+    return render_template('edit-password.html', form=form)
 
 
 #################################################################################
@@ -453,3 +493,44 @@ def display_park_details(park_code):
     return render_template('parks.html', park=park, park_url=park_url, states=states_str, \
                            activities=activities_str, topics=topics_str, note=note, \
                            images=images, favorite_codes=favorite_codes, url=url)
+
+@app.route('/parks/<park_code>/edit-notes', methods=['GET', 'POST'])
+def edit_notes(park_code):
+    # Redirect if there is no current user
+    if not g.user:
+        flash('Please log in to add or edit notes', 'danger')
+        return redirect(f'/parks/{park_code}')
+    
+    user = User.query.get_or_404(g.user.id)
+    form = EditNotesForm()
+
+    if request.method == "POST":
+        if form.validate_on_submit():
+            # Use form data to update notes
+            text = form.text.data
+
+            existing_note = Note.query.filter(Note.park_id==park_code) \
+                .filter(Note.user_id==user.id).scalar()
+            # If there is already a notes record for this park, update it
+            if existing_note:
+                existing_note.text = text
+
+                db.session.commit()
+
+                flash('Notes updated successfully', 'success')
+                return redirect(f'/parks/{park_code}')
+
+            # Otherwise, create a new record
+            else:
+                note = Note(park_id=park_code, user_id=user.id, text=text)
+
+                db.session.add(note)
+                db.session.commit()
+
+                flash('Notes updated successfully', 'success')
+                return redirect(f'/parks/{park_code}')
+    
+    form.text.data = get_note_text(park_code)
+    park=Park.query.get_or_404(park_code)
+
+    return render_template('edit-notes.html', form=form, park_name=park.full_name)
