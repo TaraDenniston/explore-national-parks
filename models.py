@@ -59,6 +59,21 @@ class User(db.Model):
             return u
         else:
             return False
+        
+    def update_pw(self, new_pw):
+        """Update hashed password and return user instance"""
+
+        # Create hashed version of password to store
+        pw_hash = bcrypt.generate_password_hash(new_pw).decode('utf8')
+
+        # Update user's password
+        user = User.query.get_or_404(self.id)
+        user.password = pw_hash
+        
+        # Commit update to database
+        db.session.commit()
+        
+        return
 
 
 class Park(db.Model):
