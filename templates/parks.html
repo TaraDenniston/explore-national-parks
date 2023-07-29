@@ -28,7 +28,7 @@
 <h3 class="my-4">Notes</h3>
 {% if g.user %}
 <p>{{ note }}</p>
-<form action="/edit-note">
+<form action="/parks/{{ park.park_code }}/edit-notes">
   <button type="submit" class="btn btn-primary">Edit Notes</button>
 </form>
 {% else %}
