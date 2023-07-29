@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Explore National Parks - Edit Notes{% endblock %}
+
+{% block content %}
+
+<form method="post">
+  <div class="d-flex justify-content-center">
+    <div class="d-flex flex-column" style="min-width: 25rem;">
+      <h1 class="pt-3 display-3 m-auto">Edit Notes</h1>
+      <h3 class="pb-3 display-5 m-auto">for {{ park_name }}</h3>
+      {{ form.hidden_tag() }}
+
+      {% for field in form 
+        if field.widget.input_type != 'hidden' %}
+      <div class="form-group my-2">
+        {{field(class="form-control", rows="15", cols="150")}}
+
+        {% for error in field.errors %}
+        <span class="font-italic text-danger">{{error}}</span>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary btn-lg my-3">Update</button>
+    </div>
+  </div>
+    
+</form>
+
+{% endblock %}
