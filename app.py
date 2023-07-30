@@ -4,9 +4,12 @@ from flask import Flask, flash, redirect, render_template, \
     session, g, request, url_for
 from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityForm, \
     SearchByTopicForm, EditUserForm, EditPasswordForm, EditNotesForm
-from keys import SECRET_KEY, NPS_API_KEY
 from models import BASE_URL, db, connect_db, User, Park, Note
 from sqlalchemy.exc import IntegrityError
+
+# Uncomment/comment for development only
+# from keys import SECRET_KEY, NPS_API_KEY
+SECRET_KEY = '0f,%|6MAf8|@:Tq'
 
 CURR_USER_KEY = "none"
 
