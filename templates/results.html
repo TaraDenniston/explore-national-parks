@@ -11,14 +11,14 @@
   <div class="card w-100">  
     <div class="card-body">
       <div class="row">
-        <div class="col">
+        <div class="col-12 col-md-8 order-2 order-md-1">
           <h5 class="card-title">{{ park.full_name }} 
             {% include "favorite.html" %} 
           </h5>
           <p class="card-text">{{ park.description }}</p>
           <a href="/parks/{{ park.park_code }}" class="btn btn-primary">More Information</a>
         </div>
-        <div class="col-4">  
+        <div class="col-12 col-md-4 order-1 order-md-2">  
           <img style="max-width: 20rem; max-height: 20rem;"
                src="{{ park.image_url }}" 
                alt="{{ park.image_alt }}">
