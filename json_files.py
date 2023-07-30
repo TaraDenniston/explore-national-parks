@@ -1,6 +1,5 @@
 import urllib.request
-from keys import NPS_API_KEY
-from models import BASE_URL
+from models import BASE_URL, NPS_API_KEY
 
 
 def create_activities_json_file():
