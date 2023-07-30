@@ -1,7 +1,11 @@
+import os
 import urllib.request, json
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from keys import NPS_API_KEY
+
+# Uncomment for development
+# from keys import NPS_API_KEY
+NPS_API_KEY = os.environ['API_KEY']
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
