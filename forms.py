@@ -45,17 +45,14 @@ class EditNotesForm(FlaskForm):
 class SearchByStateForm(FlaskForm):
     """Form for searching parks by state"""
     state = SelectField('', 
-                        choices = [('', '')] + [(item['value'], item['text']) for item in states],
-                        validators=[InputRequired()])
+                        choices = [('', '')] + [(item['value'], item['text']) for item in states])
     
 class SearchByActivityForm(FlaskForm):
     """Form for searching parks by activity"""
     activity = SelectField('', 
-                           choices = [('', '')] + [(item['id'], item['name']) for item in activities],
-                           validators=[InputRequired()])
+                           choices = [('', '')] + [(item['id'], item['name']) for item in activities])
     
 class SearchByTopicForm(FlaskForm):
     """Form for searching parks by topic"""
     topic = SelectField('', 
-                           choices = [('', '')] + [(item['id'], item['name']) for item in topics],
-                           validators=[InputRequired()])
+                           choices = [('', '')] + [(item['id'], item['name']) for item in topics])
