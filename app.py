@@ -4,7 +4,7 @@ from flask import Flask, flash, redirect, render_template, \
     session, g, request, url_for
 from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityForm, \
     SearchByTopicForm, EditUserForm, EditPasswordForm, EditNotesForm
-from models import BASE_URL, db, connect_db, User, Park, Note
+from models import BASE_URL, NPS_API_KEY, db, connect_db, User, Park, Note
 from sqlalchemy.exc import IntegrityError
 
 # Uncomment/comment for development only
