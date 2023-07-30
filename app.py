@@ -21,10 +21,13 @@ if db_url.startswith('postgres://'):
     db_url = db_url.replace('postgres://', 'postgresql://', 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 # Uncomment for development 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///explore_national_parks'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', SECRET_KEY)
+# app.config['SECRET_KEY'] = SECRET_KEY
 
 connect_db(app)
 
