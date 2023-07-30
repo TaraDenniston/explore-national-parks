@@ -7,17 +7,22 @@ from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityFo
 from models import BASE_URL, NPS_API_KEY, db, connect_db, User, Park, Note
 from sqlalchemy.exc import IntegrityError
 
-# Uncomment/comment for development only
+# Uncomment for development 
 # from keys import SECRET_KEY, NPS_API_KEY
-SECRET_KEY = '0f,%|6MAf8|@:Tq'
 
 CURR_USER_KEY = "none"
 
 app = Flask(__name__)
 app.app_context().push()
 
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgresql:///explore_national_parks'))
+# Heroku database url using deprecated "postgres" instead of "postgresql"
+db_url = os.environ['DATABASE_URL']
+if db_url.startswith('postgres://'):
+    db_url = db_url.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+# Uncomment for development 
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///explore_national_parks'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', SECRET_KEY)
 
