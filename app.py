@@ -8,26 +8,28 @@ from models import BASE_URL, NPS_API_KEY, db, connect_db, User, Park, Note
 from sqlalchemy.exc import IntegrityError
 
 # Uncomment for development 
-# from keys import SECRET_KEY, NPS_API_KEY
+from keys import SECRET_KEY
 
 CURR_USER_KEY = "none"
 
 app = Flask(__name__)
 app.app_context().push()
 
-# Heroku database url using deprecated "postgres" instead of "postgresql"
-db_url = os.environ['DATABASE_URL']
-if db_url.startswith('postgres://'):
-    db_url = db_url.replace('postgres://', 'postgresql://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+# Uncomment for production
+## Heroku database url using deprecated "postgres" instead of "postgresql"
+# db_url = os.environ['DATABASE_URL']
+# if db_url.startswith('postgres://'):
+#     db_url = db_url.replace('postgres://', 'postgresql://', 1)
+# app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+# app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Uncomment for development 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///explore_national_parks'
-# app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    os.environ.get('DATABASE_URL', 'postgresql:///explore_national_parks'))
+app.config['SECRET_KEY'] = SECRET_KEY
 
 connect_db(app)
 

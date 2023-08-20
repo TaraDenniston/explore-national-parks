@@ -4,8 +4,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 
 # Uncomment for development
-# from keys import NPS_API_KEY
-NPS_API_KEY = os.environ['API_KEY']
+from keys import NPS_API_KEY
+
+# Uncomment for production
+# NPS_API_KEY = os.environ['API_KEY']
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
