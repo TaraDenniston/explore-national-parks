@@ -1,13 +1,5 @@
-import os
-import urllib.request, json
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-
-# Uncomment for development
-from keys import NPS_API_KEY
-
-# Uncomment for production
-# NPS_API_KEY = os.environ['API_KEY']
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -15,8 +7,6 @@ bcrypt = Bcrypt()
 def connect_db(app):
     db.app = app
     db.init_app(app)
-
-BASE_URL = 'https://developer.nps.gov/api/v1'
 
 
 class User(db.Model):
@@ -95,53 +85,6 @@ class Park(db.Model):
 
     def __repr__(self):
         return f'< Park {self.park_code}: {self.full_name} >'
-    
-    @classmethod
-    def populate_table(cls):
-        """Request parks data from the NPS API and use it to populate
-           the parks table in the database"""
-        
-        # Delete any records currently in the table
-        cls.query.delete()
-        
-        parks = []
-
-        # Make request to API
-        url = f'{BASE_URL}/parks?limit=500&api_key={NPS_API_KEY}'
-        response = urllib.request.urlopen(url)
-
-        res_body = response.read()
-        data = json.loads(res_body.decode("utf-8"))
-
-        parks_list = data['data']
-
-        # From the data, create new Park objects and append to list
-        for item in parks_list:
-            if item['images']:
-                img_url=item['images'][0]['url']
-                img_alt=item['images'][0]['altText']
-            else:
-                img_url='https://placehold.co/400x300?text=No+Image'
-                img_alt='no default image'
-
-            park = Park(park_code=item['parkCode'], full_name=item['fullName'], \
-                        description=item['description'], image_url=img_url, image_alt=img_alt)
-            parks.append(park)
-
-        # Add list of parks to the db
-        db.session.add_all(parks)
-        db.session.commit()
-    
-    def get_park_details(self):
-
-        # Make request to API
-        url = f'{BASE_URL}/parks?parkCode={self.park_code}&api_key={NPS_API_KEY}'
-        response = urllib.request.urlopen(url)
-
-        res_body = response.read()
-        data = json.loads(res_body.decode("utf-8"))
-
-        return data['data'][0]
 
 
 class Favorite(db.Model):
@@ -155,6 +98,7 @@ class Favorite(db.Model):
 
     def __repr__(self):
         return f'< Favorite {self.id}: park {self.park_id} for user {self.user_id} >'
+
 
 class Note(db.Model):
     """Mapping a user to a note for a park"""

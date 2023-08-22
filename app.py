@@ -4,11 +4,11 @@ from flask import Flask, flash, redirect, render_template, \
     session, g, request, url_for
 from forms import RegisterForm, LoginForm, SearchByStateForm, SearchByActivityForm, \
     SearchByTopicForm, EditUserForm, EditPasswordForm, EditNotesForm
-from models import BASE_URL, NPS_API_KEY, db, connect_db, User, Park, Note
+from models import db, connect_db, User, Park, Note
 from sqlalchemy.exc import IntegrityError
 
 # Uncomment for development 
-from keys import SECRET_KEY
+from keys import SECRET_KEY, NPS_API_KEY
 
 CURR_USER_KEY = "none"
 
@@ -32,6 +32,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 app.config['SECRET_KEY'] = SECRET_KEY
 
 connect_db(app)
+
+# Uncomment for production
+# NPS_API_KEY = os.environ['API_KEY']
+
+BASE_URL = 'https://developer.nps.gov/api/v1'
 
 #################################################################################
 # Helper functions
@@ -444,7 +449,13 @@ def display_park_details(park_code):
     if the user is logged in"""
 
     park = Park.query.get_or_404(park_code)
-    park_data = park.get_park_details()
+
+    # Get park details from API
+    url = f'{BASE_URL}/parks?parkCode={park_code}&api_key={NPS_API_KEY}'
+    response = urllib.request.urlopen(url)
+    res_body = response.read()
+    data = json.loads(res_body.decode("utf-8"))
+    park_data = data['data'][0]
 
     # Get list of states related to the park
     states_list = park_data['states']

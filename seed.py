@@ -1,5 +1,6 @@
 from models import db, User, Park, Note
-from json_files import create_activities_json_file, create_topics_json_file
+from db_methods import create_activities_json_file, create_topics_json_file, \
+    populate_parks_table
 from app import app
 
 # Create (or recreate) tables
@@ -9,11 +10,11 @@ db.create_all()
 # Create JSON file for activities 
 create_activities_json_file()
 
-# Create JSON file for activities 
+# Create JSON file for topics 
 create_topics_json_file()
 
 # Populate parks table
-Park.populate_table()
+populate_parks_table()
 
 
 # Create data for users table
